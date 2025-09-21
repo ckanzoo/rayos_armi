@@ -11,21 +11,17 @@ class UserModel extends Model {
     }
 
     
-    public function get_paginated($limit, $offset)
+public function get_paginated($limit, $offset)
 {
     return $this->db->table($this->table)
                     ->order_by('id', 'ASC')
-                    ->limit($offset, $limit) 
+                    ->limit($limit, $offset)
                     ->get_all();
 }
 
+public function count_all_users()
+{
+    return $this->db->table($this->table)->count();
+}
 
-    
-    public function count_all_users()
-    {
-        $row = $this->db->table($this->table)
-                        ->select('COUNT(*) as total')
-                        ->get();
-        return isset($row['total']) ? (int)$row['total'] : 0;
-    }
 }
