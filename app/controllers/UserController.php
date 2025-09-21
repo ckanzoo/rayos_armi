@@ -34,7 +34,7 @@ class UserController extends Controller {
             'page_delimiter' => '&page='
         ]);
         $this->pagination->set_theme('tailwind');
-        $this->pagination->initialize($total_rows, $per_page, $page, site_url('/') . '?q=' . urlencode($q));
+        $this->pagination->initialize($total_rows, $per_page, $page, site_url() . '?q=' . urlencode($q));
 
         $data['page'] = $this->pagination->paginate();
 

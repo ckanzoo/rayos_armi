@@ -17,15 +17,25 @@
     <p class="text-gray-600 text-lg">User Management Dashboard</p>
   </div>
 
-  <!-- Controls -->
-  <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-    <input id="search" type="text" placeholder="Search users..." onkeyup="searchTable()"
+  <!-- Controls: Server-side Search + Add User -->
+  <form method="get" action="<?= site_url('user'); ?>"
+        class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 w-full">
+    <?php $q = isset($_GET['q']) ? $_GET['q'] : ''; ?>
+
+    <input id="search" name="q" type="text" placeholder="Search users..."
+           value="<?=htmlspecialchars($q);?>"
            class="border border-green-700 rounded-lg px-4 py-2 w-full md:w-1/2 focus:outline-none focus:ring-2 focus:ring-green-500">
+
+    <button type="submit"
+            class="bg-green-700 text-white px-5 py-2 rounded-lg hover:bg-green-800 font-semibold shadow-md transition">
+      🔍 Search
+    </button>
+
     <a href="<?=site_url('user/create');?>"
        class="bg-green-700 text-white px-5 py-2 rounded-lg hover:bg-green-800 font-semibold shadow-md transition">
       + Add User
     </a>
-  </div>
+  </form>
 
   <!-- Users Table -->
   <div class="overflow-x-auto rounded-lg border border-green-100 shadow-md">
@@ -39,24 +49,30 @@
         </tr>
       </thead>
       <tbody class="text-gray-700 divide-y divide-green-100">
-        <?php foreach ($users as $user): ?>
-        <tr class="hover:bg-green-50 transition">
-          <td class="px-6 py-3 font-medium"><?=$user['id'];?></td>
-          <td class="px-6 py-3"><?=$user['username'];?></td>
-          <td class="px-6 py-3"><?=$user['email'];?></td>
-          <td class="px-6 py-3 text-center flex justify-center gap-3">
-            <a href="<?=site_url('user/update/'.$user['id']);?>"
-               class="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 shadow-sm transition">
-              Edit
-            </a>
-            <a href="<?=site_url('user/delete/'.$user['id']);?>"
-               onclick="return confirm('Are you sure you want to delete this user?');"
-               class="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600 shadow-sm transition">
-              Delete
-            </a>
-          </td>
-        </tr>
-        <?php endforeach; ?>
+        <?php if (!empty($users)): ?>
+          <?php foreach ($users as $user): ?>
+          <tr class="hover:bg-green-50 transition">
+            <td class="px-6 py-3 font-medium"><?=$user['id'];?></td>
+            <td class="px-6 py-3"><?=$user['username'];?></td>
+            <td class="px-6 py-3"><?=$user['email'];?></td>
+            <td class="px-6 py-3 text-center flex justify-center gap-3">
+              <a href="<?=site_url('user/update/'.$user['id']);?>"
+                 class="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 shadow-sm transition">
+                Edit
+              </a>
+              <a href="<?=site_url('user/delete/'.$user['id']);?>"
+                 onclick="return confirm('Are you sure you want to delete this user?');"
+                 class="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600 shadow-sm transition">
+                Delete
+              </a>
+            </td>
+          </tr>
+          <?php endforeach; ?>
+        <?php else: ?>
+          <tr>
+            <td colspan="4" class="text-center py-6 text-gray-500">No users found.</td>
+          </tr>
+        <?php endif; ?>
       </tbody>
     </table>
   </div>
@@ -69,29 +85,5 @@
   </nav>
 </div>
 
-
-
-
-
-
-
-<script>
-function searchTable() {
-  const input = document.getElementById("search").value.toLowerCase();
-  const table = document.getElementById("users-table");
-  const trs = table.getElementsByTagName("tr");
-  for (let i = 1; i < trs.length; i++) {
-    const tds = trs[i].getElementsByTagName("td");
-    let show = false;
-    for (let j = 0; j < tds.length; j++) {
-      if (tds[j].innerText.toLowerCase().includes(input)) {
-        show = true;
-        break;
-      }
-    }
-    trs[i].style.display = show ? "" : "none";
-  }
-}
-</script>
 </body>
 </html>
