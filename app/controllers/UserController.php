@@ -9,41 +9,48 @@ class UserController extends Controller {
         $this->call->model('UserModel'); // Load UserModel
     }
 
-    public function index()
-    {
-        // ✅ Safe defaults
-        $page  = (int) ($this->io->get('page') ?? 1);
-        $q     = trim($this->io->get('q') ?? '');
-        $limit = 5; // records per page
+public function index($page = 1)
+{
+    // Ensure $page is at least 1
+    $page = max(1, (int) $page);
 
-        // Fetch paginated & filtered users
-        $all = $this->UserModel->get_paginated($q, $limit, $page);
-        $data['users'] = $all['records'];
-        $total_rows    = $all['total_rows'];
+    // Get search query safely
+    $q = trim($this->io->get('q') ?? '');
 
-        // Build pagination path
-        $pagination_path = '/?';
-        if ($q !== '') {
-            $pagination_path .= 'q=' . urlencode($q) . '&';
-        }
+    // Pagination limit
+    $limit = 5;
 
-        // Configure pagination
-        $this->pagination->set_options([
-            'first_link'     => '⏮ First',
-            'last_link'      => 'Last ⏭',
-            'next_link'      => 'Next →',
-            'prev_link'      => '← Prev',
-            'page_delimiter' => 'page='
-        ]);
-        $this->pagination->set_theme('tailwind');
-        $this->pagination->initialize($total_rows, $limit, $page, $pagination_path);
+    // Fetch paginated & filtered users
+    $all = $this->UserModel->get_paginated($q, $limit, $page);
+    $data['users'] = $all['records'];
+    $total_rows    = $all['total_rows'];
 
-        $data['page'] = $this->pagination->paginate();
-        $data['q']    = $q;
-
-        // Load view
-        $this->call->view('user/view', $data);
+    // Build pagination path
+    $pagination_path = '/user/index';
+    if ($q !== '') {
+        $pagination_path .= '?q=' . urlencode($q) . '&';
+    } else {
+        $pagination_path .= '?';
     }
+
+    // Configure pagination
+    $this->pagination->set_options([
+        'first_link'     => '⏮ First',
+        'last_link'      => 'Last ⏭',
+        'next_link'      => 'Next →',
+        'prev_link'      => '← Prev',
+        'page_delimiter' => 'page='
+    ]);
+    $this->pagination->set_theme('tailwind');
+    $this->pagination->initialize($total_rows, $limit, $page, $pagination_path);
+
+    $data['page'] = $this->pagination->paginate();
+    $data['q']    = $q;
+
+    // Load view
+    $this->call->view('user/view', $data);
+}
+
 
     public function create()
     {
