@@ -6,48 +6,52 @@ class UserController extends Controller {
     public function __construct()
     {
         parent::__construct();
-        $this->call->model('UserModel');
+        $this->call->model('UserModel'); // Load UserModel
     }
 
     public function index()
     {
-        // Current page
-        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-        if ($page < 1) $page = 1;
+        // ✅ Safe defaults
+        $page  = (int) ($this->io->get('page') ?? 1);
+        $q     = trim($this->io->get('q') ?? '');
+        $limit = 5; // records per page
 
-        // Search query
-        $q = isset($_GET['q']) ? trim($_GET['q']) : '';
+        // Fetch paginated & filtered users
+        $all = $this->UserModel->get_paginated($q, $limit, $page);
+        $data['users'] = $all['records'];
+        $total_rows    = $all['total_rows'];
 
-        $per_page = 5;
+        // Build pagination path
+        $pagination_path = '/?';
+        if ($q !== '') {
+            $pagination_path .= 'q=' . urlencode($q) . '&';
+        }
 
-        // Get records + total count from model
-        $result = $this->UserModel->page($q, $per_page, $page);
-        $data['users'] = $result['records'];
-        $total_rows = $result['total_rows'];
-
-        // Pagination config (Lavalust built-in)
+        // Configure pagination
         $this->pagination->set_options([
             'first_link'     => '⏮ First',
             'last_link'      => 'Last ⏭',
-            'next_link'      => 'Next ›',
-            'prev_link'      => '‹ Prev',
-            'page_delimiter' => '&page='
+            'next_link'      => 'Next →',
+            'prev_link'      => '← Prev',
+            'page_delimiter' => 'page='
         ]);
         $this->pagination->set_theme('tailwind');
-        $this->pagination->initialize($total_rows, $per_page, $page, site_url() . '?q=' . urlencode($q));
+        $this->pagination->initialize($total_rows, $limit, $page, $pagination_path);
 
         $data['page'] = $this->pagination->paginate();
+        $data['q']    = $q;
 
+        // Load view
         $this->call->view('user/view', $data);
     }
 
     public function create()
     {
         if ($this->io->method() === 'post') {
-            $username = $this->io->post('username');
-            $email    = $this->io->post('email');
+            $username = trim($this->io->post('username'));
+            $email    = trim($this->io->post('email'));
 
-            if (!empty($username) && !empty($email)) {
+            if ($username !== '' && $email !== '') {
                 $this->UserModel->insert([
                     'username' => $username,
                     'email'    => $email
@@ -68,17 +72,17 @@ class UserController extends Controller {
         if (!$user) redirect('/');
 
         if ($this->io->method() === 'post') {
-            $username = $this->io->post('username');
-            $email    = $this->io->post('email');
+            $username = trim($this->io->post('username'));
+            $email    = trim($this->io->post('email'));
 
-            if (!empty($username) && !empty($email)) {
+            if ($username !== '' && $email !== '') {
                 $this->UserModel->update($id, [
                     'username' => $username,
                     'email'    => $email
                 ]);
                 redirect('/');
             } else {
-                $data['user'] = $user;
+                $data['user']  = $user;
                 $data['error'] = "All fields are required!";
                 $this->call->view('user/update', $data);
             }

@@ -10,23 +10,27 @@ class UserModel extends Model {
         parent::__construct();
     }
 
-    public function page($q, $limit, $page)
-    {
+    public function get_paginated($q = '', $limit = 5, $page = 1) {
         $query = $this->db->table($this->table);
 
+        // Apply search filter
         if (!empty($q)) {
-            $query->like('id', '%'.$q.'%')
-                  ->or_like('username', '%'.$q.'%')
-                  ->or_like('email', '%'.$q.'%');
+            $query->like('username', $q)
+                  ->or_like('email', $q);
         }
 
-        // Count total
+        // Count total rows matching search
         $countQuery = clone $query;
-        $data['total_rows'] = $countQuery->select_count('*', 'count')->get()['count'];
+        $total_rows = $countQuery->select_count('*', 'count')->get()['count'];
 
-        // Get records with pagination
-        $data['records'] = $query->pagination($limit, $page)->get_all();
+        // Fetch paginated records
+        $records = $query->order_by('id', 'ASC')
+                         ->pagination($limit, $page)
+                         ->get_all();
 
-        return $data;
+        return [
+            'records'    => $records,
+            'total_rows' => $total_rows
+        ];
     }
 }
