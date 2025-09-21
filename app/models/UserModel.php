@@ -10,18 +10,23 @@ class UserModel extends Model {
         parent::__construct();
     }
 
-    
-public function get_paginated($limit, $offset)
-{
-    return $this->db->table($this->table)
-                    ->order_by('id', 'ASC')
-                    ->limit($limit, $offset)
-                    ->get_all();
-}
+    public function page($q, $limit, $page)
+    {
+        $query = $this->db->table($this->table);
 
-public function count_all_users()
-{
-    return $this->db->table($this->table)->count();
-}
+        if (!empty($q)) {
+            $query->like('id', '%'.$q.'%')
+                  ->or_like('username', '%'.$q.'%')
+                  ->or_like('email', '%'.$q.'%');
+        }
 
+        // Count total
+        $countQuery = clone $query;
+        $data['total_rows'] = $countQuery->select_count('*', 'count')->get()['count'];
+
+        // Get records with pagination
+        $data['records'] = $query->pagination($limit, $page)->get_all();
+
+        return $data;
+    }
 }

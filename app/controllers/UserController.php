@@ -6,60 +6,40 @@ class UserController extends Controller {
     public function __construct()
     {
         parent::__construct();
+        $this->call->model('UserModel');
     }
 
-    
-  public function index()
-{
-    $this->call->model('UserModel');
+    public function index()
+    {
+        // Current page
+        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+        if ($page < 1) $page = 1;
 
-    $per_page = 5; 
+        // Search query
+        $q = isset($_GET['q']) ? trim($_GET['q']) : '';
 
-    
-    $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-    if ($page < 1) {
-        $page = 1;
+        $per_page = 5;
+
+        // Get records + total count from model
+        $result = $this->UserModel->page($q, $per_page, $page);
+        $data['users'] = $result['records'];
+        $total_rows = $result['total_rows'];
+
+        // Pagination config (Lavalust built-in)
+        $this->pagination->set_options([
+            'first_link'     => '⏮ First',
+            'last_link'      => 'Last ⏭',
+            'next_link'      => 'Next ›',
+            'prev_link'      => '‹ Prev',
+            'page_delimiter' => '&page='
+        ]);
+        $this->pagination->set_theme('tailwind');
+        $this->pagination->initialize($total_rows, $per_page, $page, site_url('/') . '?q=' . urlencode($q));
+
+        $data['page'] = $this->pagination->paginate();
+
+        $this->call->view('user/view', $data);
     }
-
-    
-    $total_users = $this->UserModel->count_all_users();
-    $total_pages = max(1, ceil($total_users / $per_page));
-
-    
-    if ($page > $total_pages) {
-        $page = $total_pages;
-    }
-
-    
-    $offset = ($page - 1) * $per_page;
-
-    
-    $users = $this->UserModel->get_paginated($per_page, $offset);
-
-    
-    $pagination_links = '';
-
-    if ($page > 1) {
-        $pagination_links .= '<a href="?page='.($page - 1).'" class="bg-green-100 text-green-700 px-3 py-1 rounded hover:bg-green-200">Prev</a> ';
-    }
-
-    for ($i = 1; $i <= $total_pages; $i++) {
-        $active = ($i == $page)
-            ? 'bg-green-700 text-white px-3 py-1 rounded'
-            : 'bg-green-100 text-green-700 px-3 py-1 rounded hover:bg-green-200';
-        $pagination_links .= '<a href="?page='.$i.'" class="'.$active.'">'.$i.'</a> ';
-    }
-
-    if ($page < $total_pages) {
-        $pagination_links .= '<a href="?page='.($page + 1).'" class="bg-green-100 text-green-700 px-3 py-1 rounded hover:bg-green-200">Next</a>';
-    }
-
-    
-    $data['users'] = $users;
-    $data['pagination_links'] = $pagination_links;
-
-    $this->call->view('user/view', $data);
-}
 
     public function create()
     {
@@ -72,7 +52,7 @@ class UserController extends Controller {
                     'username' => $username,
                     'email'    => $email
                 ]);
-                redirect('/'); 
+                redirect('/');
             } else {
                 $data['error'] = "All fields are required!";
                 $this->call->view('user/create', $data);
@@ -82,14 +62,10 @@ class UserController extends Controller {
         }
     }
 
-    
     public function update($id)
     {
         $user = $this->UserModel->find($id);
-
-        if (!$user) {
-            redirect('/'); 
-        }
+        if (!$user) redirect('/');
 
         if ($this->io->method() === 'post') {
             $username = $this->io->post('username');
@@ -100,7 +76,7 @@ class UserController extends Controller {
                     'username' => $username,
                     'email'    => $email
                 ]);
-                redirect('/'); 
+                redirect('/');
             } else {
                 $data['user'] = $user;
                 $data['error'] = "All fields are required!";
@@ -111,7 +87,6 @@ class UserController extends Controller {
         }
     }
 
-    
     public function delete($id)
     {
         $this->UserModel->delete($id);

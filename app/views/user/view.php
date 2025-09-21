@@ -64,37 +64,11 @@
 
 <!-- Pagination -->
 <div class="flex justify-center mt-8">
-  <nav class="inline-flex rounded-full shadow-md overflow-hidden border border-green-300">
-    <?php if (strpos($pagination_links, 'Prev') !== false): ?>
-      <a href="?page=<?= max(1, (isset($_GET['page']) ? $_GET['page'] - 1 : 1)); ?>"
-         class="px-6 py-3 text-green-700 bg-green-50 hover:bg-green-100 border-r border-green-300 text-lg font-semibold transition">
-        ‹ Prev
-      </a>
-    <?php endif; ?>
-
-    <?php
-      $current_page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-      preg_match_all('/\?page=(\d+)/', $pagination_links, $pages);
-      $pages = array_unique($pages[1]);
-      foreach ($pages as $p):
-        $active = ($p == $current_page)
-          ? 'bg-green-700 text-white'
-          : 'bg-green-50 text-green-700 hover:bg-green-100';
-    ?>
-      <a href="?page=<?= $p; ?>"
-         class="px-6 py-3 <?= $active; ?> border-r border-green-300 text-lg font-semibold transition">
-        <?= $p; ?>
-      </a>
-    <?php endforeach; ?>
-
-    <?php if (strpos($pagination_links, 'Next') !== false): ?>
-      <a href="?page=<?= (isset($_GET['page']) ? $_GET['page'] + 1 : 2); ?>"
-         class="px-6 py-3 text-green-700 bg-green-50 hover:bg-green-100 text-lg font-semibold transition">
-        Next ›
-      </a>
-    <?php endif; ?>
+  <nav class="inline-flex rounded-full shadow-md overflow-hidden border border-green-300 pagination-container">
+    <?php if (isset($page)) echo $page; ?>
   </nav>
 </div>
+
 
 
 
