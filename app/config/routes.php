@@ -56,6 +56,10 @@ $router->get('/auth/logout', 'AuthController::logout');      // Logout user
 $router->get('/auth/register', 'AuthController::register');  // Show register form
 $router->post('/auth/register', 'AuthController::register'); // Handle register
 
+
+// View-only list for users
+$router->get('/students/view_only', 'StudentsController::view_only');
+
 /* =====================
    STUDENTS ROUTES
    ===================== */

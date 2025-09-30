@@ -1,205 +1,225 @@
 <?php
-defined('PREVENT_DIRECT_ACCESS') or exit('No direct script access allowed');
+defined('PREVENT_DIRECT_ACCESS') OR exit('No direct script access allowed');
 
-class StudentsController extends Controller
-{
-    private $upload_dir;
-    private $upload_url;
+class StudentsController extends Controller {
+    private $per_page = 10; // default per page; palitan kung kailangan
 
     public function __construct()
     {
         parent::__construct();
-        $this->call->library('pagination');
         $this->call->library('session');
+        $this->call->model('StudentsModel');
 
-        // ✅ Absolute path sa server (relative mula sa controller directory)
-        $this->upload_dir = realpath(__DIR__ . '/../../public/uploads') . '/';
-
-        // ✅ Public URL na gagamitin sa browser
-        $this->upload_url = BASE_URL . 'public/uploads/';
-
-        // Gumawa ng uploads folder kung wala pa
-        if (!is_dir($this->upload_dir)) {
-            mkdir($this->upload_dir, 0777, true);
-        }
-
-        // Require login
         if (!$this->session->userdata('logged_in')) {
             redirect('auth/login');
         }
-
-        $this->pagination->set_theme('custom');
-        $this->pagination->set_custom_classes([
-            'nav' => 'pagination-nav',
-            'ul' => 'pagination',
-            'li' => 'pagination-item',
-            'a' => 'pagination-link',
-            'active' => 'active'
-        ]);
-    }
-    /** GET ALL STUDENTS */
-    public function get_all($page = 1)
-    {
-        $per_page = isset($_GET['per_page']) ? (int) $_GET['per_page'] : 10;
-        $allowed_per_page = [10, 25, 50, 100];
-        if (!in_array($per_page, $allowed_per_page)) $per_page = 10;
-
-        $search       = isset($_GET['search']) ? trim($_GET['search']) : null;
-        $show_deleted = isset($_GET['show']) && $_GET['show'] === 'deleted';
-
-        $offset = ($page - 1) * $per_page;
-        $limit_clause = "LIMIT {$offset}, {$per_page}";
-
-        if ($show_deleted) {
-            $total_rows = $this->StudentsModel->count_deleted_records($search);
-            $base_url   = '/students/get-all?show=deleted';
-            $records    = $this->StudentsModel->get_deleted_with_pagination($limit_clause, $search);
-        } else {
-            $total_rows = $this->StudentsModel->count_all_records($search);
-            $base_url   = '/students/get-all';
-            $records    = $this->StudentsModel->get_records_with_pagination($limit_clause, $search);
-        }
-
-        $pagination_data = $this->pagination->initialize($total_rows, $per_page, $page, $base_url, 5);
-
-        $data = [
-            'records'          => $records,
-            'total_records'    => $total_rows,
-            'per_page'         => $per_page,
-            'page'             => $page,
-            'pagination_data'  => $pagination_data,
-            'pagination_links' => $this->pagination->paginate(),
-            'search'           => $search,
-            'show_deleted'     => $show_deleted,
-            'upload_url'       => $this->upload_url
-        ];
-
-        $this->call->view('ui/get_all', $data);
     }
 
-/** CREATE STUDENT */
-public function create()
+    private function require_admin()
 {
-    $this->call->library('form_validation');
-
-    $error_message = null; // Variable para sa error
-
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $this->form_validation->name('first_name')->required();
-        $this->form_validation->name('last_name')->required();
-        $this->form_validation->name('email')->required()->valid_email();
-        $this->form_validation->name('password')->required()->min_length(6);
-
-        if ($this->form_validation->run()) {
-            $photo = null;
-
-            if (isset($_FILES['photo']) && is_uploaded_file($_FILES['photo']['tmp_name'])) {
-                $this->call->library('upload', $_FILES['photo']);
-
-                $this->upload->set_dir($this->upload_dir)
-                             ->allowed_extensions(['jpg','jpeg','png'])
-                             ->allowed_mimes(['image/jpeg','image/png'])
-                             ->max_size(2)
-                             ->is_image();
-
-                if ($this->upload->do_upload()) {
-                    $photo = $this->upload->get_filename();
-                } else {
-                    error_log("Upload Error: " . implode(', ', $this->upload->get_errors()));
-                }
-            }
-
-            $data = [
-                'first_name' => $_POST['first_name'],
-                'last_name'  => $_POST['last_name'],
-                'email'      => $_POST['email'],
-                'password'   => $_POST['password'],
-                'photo'      => $photo
-            ];
-
-            try {
-                $this->StudentsModel->insert($data);
-                redirect('students/get-all');
-            } catch (PDOException $e) {
-                // Check if it's a duplicate entry error
-                if (str_contains($e->getMessage(), 'Duplicate entry')) {
-                    $error_message = "The email is already taken.";
-                } else {
-                    $error_message = "Something went wrong: " . $e->getMessage();
-                }
-            }
-        }
+    if ($this->session->userdata('role') !== 'admin') {
+        echo '
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <script src="https://cdn.tailwindcss.com"></script>
+            <title>Access Denied</title>
+            <script>
+                // Auto-redirect after 3 seconds
+                setTimeout(function() {
+                    window.location.href = "/students/view_only";
+                }, 3000);
+            </script>
+        </head>
+        <body class="bg-gray-100 flex items-center justify-center min-h-screen">
+            <div class="text-center bg-white p-10 rounded-2xl shadow-xl max-w-lg">
+                <div class="text-red-600 text-6xl mb-4">🚫</div>
+                <h1 class="text-2xl font-bold text-gray-800 mb-2">Access Denied</h1>
+                <p class="text-gray-600 mb-6">
+                    Only <span class="font-semibold text-red-500">admins</span> can access this page.
+                </p>
+                <a href="/students/view_only" 
+                   class="px-6 py-3 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition">
+                    ⬅️ Back to Students
+                </a>
+                <p class="text-sm text-gray-500 mt-4">(Redirecting in 3 seconds...)</p>
+            </div>
+        </body>
+        </html>';
+        exit;
     }
-
-    $this->call->view('ui/create', ['error_message' => $error_message]);
 }
 
 
-    /** UPDATE STUDENT */
-    public function update($id)
+  
+    public function get_all()
     {
-        $this->call->library('form_validation');
-        $contents = $this->StudentsModel->find($id);
+        $this->require_admin();
 
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $this->form_validation->name('first_name')->required();
-            $this->form_validation->name('last_name')->required();
-            $this->form_validation->name('email')->required()->valid_email();
+        $page = isset($_GET['page']) ? max(1, (int) $_GET['page']) : 1;
+        $search = isset($_GET['search']) ? trim($_GET['search']) : '';
+        $show_deleted = (isset($_GET['show']) && $_GET['show'] === 'deleted') ? true : false;
 
-            if ($this->form_validation->run()) {
-                $photo = $contents['photo'];
+        $records = $this->StudentsModel->get_all($page, $this->per_page, $search, $show_deleted);
+        $total = $this->StudentsModel->count_all($search, $show_deleted);
 
-                if (isset($_FILES['photo']) && is_uploaded_file($_FILES['photo']['tmp_name'])) {
-                    // Load upload library
-                    $this->call->library('upload', $_FILES['photo']);
+        $pagination_links = $this->generate_pagination($page, $total, $this->per_page, $search, $show_deleted);
 
-                    $this->upload->set_dir($this->upload_dir)
-                                 ->allowed_extensions(['jpg','jpeg','png'])
-                                 ->allowed_mimes(['image/jpeg','image/png'])
-                                 ->max_size(2)
-                                 ->is_image();
-
-                    if ($this->upload->do_upload()) {
-                        $photo = $this->upload->get_filename();
-                    } else {
-                        error_log("Upload Error: " . implode(', ', $this->upload->get_errors()));
-                    }
-                }
-
-                $data = [
-                    'first_name' => $_POST['first_name'],
-                    'last_name'  => $_POST['last_name'],
-                    'email'      => $_POST['email'],
-                    'password'   => !empty($_POST['password']) ? $_POST['password'] : $contents['password'],
-                    'photo'      => $photo
-                ];
-
-                $this->StudentsModel->update($id, $data);
-                redirect('students/get-all');
-            }
-        }
-
-        $this->call->view('ui/update', ['user' => $contents, 'upload_url' => $this->upload_url]);
+        $this->call->view('ui/get_all', [
+            'records' => $records,
+            'students' => $records,
+            'page' => $page,
+            'per_page' => $this->per_page,
+            'search' => $search,
+            'show_deleted' => $show_deleted,
+            'pagination_links' => $pagination_links,
+            'role' => 'admin',
+            'upload_url' => '/uploads/'
+        ]);
     }
 
-    /** SOFT DELETE */
+    public function view_only()
+    {
+        $page = isset($_GET['page']) ? max(1, (int) $_GET['page']) : 1;
+        $search = isset($_GET['search']) ? trim($_GET['search']) : '';
+        $show_deleted = false; // users cannot see deleted items
+
+        $records = $this->StudentsModel->get_all($page, $this->per_page, $search, $show_deleted);
+        $total = $this->StudentsModel->count_all($search, $show_deleted);
+
+        $pagination_links = $this->generate_pagination($page, $total, $this->per_page, $search, $show_deleted);
+
+        $this->call->view('ui/get_all', [
+            'records' => $records,
+            'students' => $records,
+            'page' => $page,
+            'per_page' => $this->per_page,
+            'search' => $search,
+            'show_deleted' => $show_deleted,
+            'pagination_links' => $pagination_links,
+            'role' => 'user',
+            'upload_url' => '/uploads/'
+        ]);
+    }
+
+
+    public function create()
+    {
+        $this->require_admin();
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $this->StudentsModel->insert($_POST);
+            redirect('students/get-all');
+        }
+
+        $this->call->view('ui/create', [
+            'role' => $this->session->userdata('role')
+        ]);
+    }
+
+
+    public function update($id)
+    {
+        $this->require_admin();
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $this->StudentsModel->update($id, $_POST);
+            redirect('students/get-all');
+        }
+
+        $student = $this->StudentsModel->find($id);
+        $this->call->view('ui/update', [
+            'user' => $student,
+            'role' => $this->session->userdata('role')
+        ]);
+    }
+
     public function delete($id)
     {
+        $this->require_admin();
         $this->StudentsModel->soft_delete($id);
         redirect('students/get-all');
     }
 
-    /** HARD DELETE */
-    public function hard_delete($id)
-    {
-        $this->StudentsModel->hard_delete($id);
-        redirect('students/get-all?show=deleted');
-    }
-
-    /** RESTORE */
     public function restore($id)
     {
+        $this->require_admin();
         $this->StudentsModel->restore($id);
         redirect('students/get-all?show=deleted');
     }
+
+    public function hard_delete($id)
+    {
+        $this->require_admin();
+        $this->StudentsModel->delete($id);
+        redirect('students/get-all?show=deleted');
+    }
+
+    private function generate_pagination($page, $total, $per_page, $search = '', $show_deleted = false)
+{
+    $pages = (int) ceil($total / $per_page);
+    if ($pages <= 1) return '';
+
+    $query_base = [];
+    if ($search !== '') $query_base['search'] = $search;
+    if ($show_deleted) $query_base['show'] = 'deleted';
+
+    $html = '<ul>';
+
+    // ⏮️ First
+    if ($page > 1) {
+        $query = $query_base;
+        $query['page'] = 1;
+        $qs = http_build_query($query);
+        $html .= "<li><a href='?{$qs}'>⏮️ First</a></li>";
+    } else {
+        $html .= "<li><span class='disabled'>⏮️ First</span></li>";
+    }
+
+    // ← Prev
+    if ($page > 1) {
+        $query = $query_base;
+        $query['page'] = $page - 1;
+        $qs = http_build_query($query);
+        $html .= "<li><a href='?{$qs}'>← Prev</a></li>";
+    } else {
+        $html .= "<li><span class='disabled'>← Prev</span></li>";
+    }
+
+    // Page numbers
+    for ($i = 1; $i <= $pages; $i++) {
+        $query = $query_base;
+        $query['page'] = $i;
+        $qs = http_build_query($query);
+        $active = ($i === $page) ? 'active' : '';
+        $html .= "<li><a href='?{$qs}' class='{$active}'>{$i}</a></li>";
+    }
+
+    // Next →
+    if ($page < $pages) {
+        $query = $query_base;
+        $query['page'] = $page + 1;
+        $qs = http_build_query($query);
+        $html .= "<li><a href='?{$qs}'>Next →</a></li>";
+    } else {
+        $html .= "<li><span class='disabled'>Next →</span></li>";
+    }
+
+    // ⏭️ Last
+    if ($page < $pages) {
+        $query = $query_base;
+        $query['page'] = $pages;
+        $qs = http_build_query($query);
+        $html .= "<li><a href='?{$qs}'>Last ⏭️</a></li>";
+    } else {
+        $html .= "<li><span class='disabled'>Last ⏭️</span></li>";
+    }
+
+    $html .= '</ul>';
+    return $html;
 }
+
+}
+

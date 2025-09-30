@@ -106,57 +106,37 @@
       
       <!-- First Name Field -->
       <div>
-        <label class="block text-sm font-semibold text-gray-700 mb-2">
-          First Name
-        </label>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">First Name</label>
         <div class="relative">
-          <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-          </svg>
           <input type="text" name="first_name" placeholder="Enter your first name" required
-            class="input-field w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white text-gray-900">
+            class="input-field w-full pl-4 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 bg-white text-gray-900">
         </div>
       </div>
 
       <!-- Last Name Field -->
       <div>
-        <label class="block text-sm font-semibold text-gray-700 mb-2">
-          Last Name
-        </label>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">Last Name</label>
         <div class="relative">
-          <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-          </svg>
           <input type="text" name="last_name" placeholder="Enter your last name" required
-            class="input-field w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white text-gray-900">
+            class="input-field w-full pl-4 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 bg-white text-gray-900">
         </div>
       </div>
 
       <!-- Email Field -->
       <div>
-        <label class="block text-sm font-semibold text-gray-700 mb-2">
-          Email Address
-        </label>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
         <div class="relative">
-          <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/>
-          </svg>
           <input type="email" name="email" placeholder="Enter your email" required
-            class="input-field w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white text-gray-900">
+            class="input-field w-full pl-4 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 bg-white text-gray-900">
         </div>
       </div>
 
       <!-- Password Field -->
       <div>
-        <label class="block text-sm font-semibold text-gray-700 mb-2">
-          Password
-        </label>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">Password</label>
         <div class="relative">
-          <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-          </svg>
           <input type="password" name="password" placeholder="Create a password" required
-            class="input-field w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white text-gray-900">
+            class="input-field w-full pl-4 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 bg-white text-gray-900">
         </div>
       </div>
 
@@ -166,19 +146,25 @@
           Profile Photo <span class="text-gray-500 font-normal">(optional)</span>
         </label>
         <div class="relative">
-          <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-          </svg>
           <input type="file" name="photo" accept="image/*"
-            class="input-field w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white text-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100 file:cursor-pointer">
+            class="input-field w-full pl-4 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 bg-white text-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100 file:cursor-pointer">
+        </div>
+      </div>
+
+      <!-- Role Field -->
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">Role</label>
+        <div class="relative">
+          <select name="role" required
+            class="input-field w-full pl-4 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 bg-white text-gray-900">
+            <option value="user" selected>User</option>
+            <option value="admin">Admin</option>
+          </select>
         </div>
       </div>
 
       <!-- Register Button -->
       <button type="submit" class="btn-primary w-full px-6 py-3 text-white rounded-xl font-semibold flex items-center justify-center gap-2 mt-6">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
-        </svg>
         Create Account
       </button>
     </form>
@@ -202,3 +188,4 @@
 
 </body>
 </html>
+

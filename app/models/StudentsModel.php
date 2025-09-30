@@ -1,127 +1,123 @@
 <?php
-defined('PREVENT_DIRECT_ACCESS') or exit('No direct script access allowed');
+defined('PREVENT_DIRECT_ACCESS') OR exit('No direct script access allowed');
 
-/**
- * Model: StudentsModel
- * 
- * Automatically generated via CLI.
- */
-class StudentsModel extends Model
-{
+class StudentsModel extends Model {
     protected $table = 'students';
-    protected $primary_key = 'id';
 
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
-        public function count_all_records($search = null)
-    {
-        $sql = "SELECT COUNT(id) AS total FROM {$this->table} WHERE {$this->soft_delete_column} IS NULL";
-        $params = [];
-        if ($search) {
-            $sql .= " AND (first_name LIKE ? OR last_name LIKE ? OR email LIKE ?)";
-            $params = ["%{$search}%", "%{$search}%", "%{$search}%"];
-        }
-        $row = $this->db->raw($sql, $params)->fetch(PDO::FETCH_ASSOC);
-        return $row ? (int)$row['total'] : 0;
-    }
-
-    public function get_records_with_pagination($limit_clause, $search = null)
-    {
-        $sql = "SELECT * FROM {$this->table} WHERE {$this->soft_delete_column} IS NULL";
-        $params = [];
-        if ($search) {
-            $sql .= " AND (first_name LIKE ? OR last_name LIKE ? OR email LIKE ?)";
-            $params = ["%{$search}%", "%{$search}%", "%{$search}%"];
-        }
-        $sql .= " ORDER BY id ASC {$limit_clause}";
-        return $this->db->raw($sql, $params)->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    public function count_deleted_records($search = null)
-    {
-        $sql = "SELECT COUNT(id) AS total FROM {$this->table} WHERE {$this->soft_delete_column} IS NOT NULL";
-        $params = [];
-        if ($search) {
-            $sql .= " AND (first_name LIKE ? OR last_name LIKE ? OR email LIKE ?)";
-            $params = ["%{$search}%", "%{$search}%", "%{$search}%"];
-        }
-        $row = $this->db->raw($sql, $params)->fetch(PDO::FETCH_ASSOC);
-        return $row ? (int)$row['total'] : 0;
-    }
-
-    public function get_deleted_with_pagination($limit_clause, $search = null)
-    {
-        $sql = "SELECT * FROM {$this->table} WHERE {$this->soft_delete_column} IS NOT NULL";
-        $params = [];
-        if ($search) {
-            $sql .= " AND (first_name LIKE ? OR last_name LIKE ? OR email LIKE ?)";
-            $params = ["%{$search}%", "%{$search}%", "%{$search}%"];
-        }
-        $sql .= " ORDER BY id DESC {$limit_clause}";
-        return $this->db->raw($sql, $params)->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    public function get_deleted_records()
-    {
-        $sql = "SELECT * FROM {$this->table} WHERE {$this->soft_delete_column} IS NOT NULL ORDER BY id DESC";
-        return $this->db->raw($sql)->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    public function soft_delete($id): ?bool
-    {
-        if (empty($id)) return null;
-        $sql = "UPDATE {$this->table} SET {$this->soft_delete_column} = NOW() WHERE {$this->primary_key} = ?";
-        $stmt = $this->db->raw($sql, [$id]);
-        return $stmt->rowCount() > 0 ? true : null;
-    }
-
-    public function restore($id): ?bool
-    {
-        if (empty($id)) return null;
-        $sql = "UPDATE {$this->table} SET {$this->soft_delete_column} = NULL WHERE {$this->primary_key} = ?";
-        $stmt = $this->db->raw($sql, [$id]);
-        return $stmt->rowCount() > 0 ? true : null;
-    }
-
-    public function hard_delete($id): ?bool
-    {
-        if (empty($id)) return null;
-        $sql = "DELETE FROM {$this->table} WHERE {$this->primary_key} = ?";
-        $stmt = $this->db->raw($sql, [$id]);
-        return $stmt->rowCount() > 0 ? true : null;
-    }
-
-    public function find_by_email($email)
-{
-    $email = trim($email);
-
-    // kunin ang unang row lang
-    $account = $this->db->table($this->table)->where('email', $email)->get();
-
-    // kung walang laman, balik null
-    if (!$account) {
-        return null;
-    }
-
-    // kung object (stdClass), gawin array
-    if (is_object($account)) {
-        return (array) $account;
-    }
-
-    // kung array na, ibalik as is
-    if (is_array($account)) {
-        return $account;
-    }
-
-    return null;
-}
-
-
+    /** CREATE ACCOUNT */
     public function create_account($data)
     {
         return $this->db->table($this->table)->insert($data);
     }
+
+    /** FIND USER BY EMAIL */
+    public function find_by_email($email)
+    {
+        $sql = "SELECT * FROM {$this->table} WHERE email = ? AND deleted_at IS NULL LIMIT 1";
+        $stmt = $this->db->raw($sql, [$email]);
+
+        return $stmt ? $stmt->fetch(PDO::FETCH_ASSOC) : null;
+    }
+
+    /** GET ALL STUDENTS (with pagination + search + deleted filter) */
+    public function get_all($page = 1, $per_page = 10, $search = '', $with_deleted = false)
+    {
+        $sql = "SELECT * FROM {$this->table} WHERE 1=1";
+        $params = [];
+
+        if (!empty($search)) {
+            $sql .= " AND (first_name LIKE ? OR last_name LIKE ? OR email LIKE ?)";
+            $params[] = "%$search%";
+            $params[] = "%$search%";
+            $params[] = "%$search%";
+        }
+
+        if ($with_deleted) {
+            $sql .= " AND deleted_at IS NOT NULL";
+        } else {
+            $sql .= " AND deleted_at IS NULL";
+        }
+
+        $offset = ($page - 1) * $per_page;
+        $sql .= " ORDER BY id DESC LIMIT {$per_page} OFFSET {$offset}";
+
+        $stmt = $this->db->raw($sql, $params);
+        return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+    }
+
+    /** COUNT ALL (for pagination) */
+    public function count_all($search = '', $with_deleted = false)
+    {
+        $sql = "SELECT COUNT(*) as total FROM {$this->table} WHERE 1=1";
+        $params = [];
+
+        if (!empty($search)) {
+            $sql .= " AND (first_name LIKE ? OR last_name LIKE ? OR email LIKE ?)";
+            $params[] = "%$search%";
+            $params[] = "%$search%";
+            $params[] = "%$search%";
+        }
+
+        if ($with_deleted) {
+            $sql .= " AND deleted_at IS NOT NULL";
+        } else {
+            $sql .= " AND deleted_at IS NULL";
+        }
+
+        $stmt = $this->db->raw($sql, $params);
+        $row = $stmt ? $stmt->fetch(PDO::FETCH_ASSOC) : null;
+
+        return $row ? (int) $row['total'] : 0;
+    }
+
+    /** INSERT */
+    public function insert($data)
+    {
+        return $this->db->table($this->table)->insert($data);
+    }
+
+    /** UPDATE */
+    public function update($id, $data)
+    {
+        return $this->db->table($this->table)->where('id', $id)->update($data);
+    }
+
+    /** SOFT DELETE */
+    public function soft_delete($id)
+    {
+        return $this->db->table($this->table)
+            ->where('id', $id)
+            ->update(['deleted_at' => date('Y-m-d H:i:s')]);
+    }
+
+    /** RESTORE */
+    public function restore($id)
+    {
+        return $this->db->table($this->table)
+            ->where('id', $id)
+            ->update(['deleted_at' => null]);
+    }
+
+    /** HARD DELETE */
+    public function delete($id)
+    {
+        return $this->db->table($this->table)->where('id', $id)->delete();
+    }
+
+    /** FIND BY ID */
+    public function find($id, $with_deleted = false)
+    {
+        $sql = "SELECT * FROM {$this->table} WHERE id = ?";
+        $params = [$id];
+
+        if (!$with_deleted) {
+            $sql .= " AND deleted_at IS NULL";
+        }
+
+        $sql .= " LIMIT 1";
+
+        $stmt = $this->db->raw($sql, $params);
+        return $stmt ? $stmt->fetch(PDO::FETCH_ASSOC) : null;
+    }
 }
+
