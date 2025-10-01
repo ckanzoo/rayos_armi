@@ -39,7 +39,7 @@ class StudentsModel extends Model {
         }
 
         $offset = ($page - 1) * $per_page;
-        $sql .= " ORDER BY id DESC LIMIT {$per_page} OFFSET {$offset}";
+        $sql .= " ORDER BY id ASC LIMIT {$per_page} OFFSET {$offset}";
 
         $stmt = $this->db->raw($sql, $params);
         return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];

@@ -160,7 +160,7 @@ class StudentsController extends Controller {
     private function generate_pagination($page, $total, $per_page, $search = '', $show_deleted = false)
 {
     $pages = (int) ceil($total / $per_page);
-    if ($pages <= 1) return '';
+    if ($pages < 1) $pages = 1; // siguraduhin na may at least 1 page
 
     $query_base = [];
     if ($search !== '') $query_base['search'] = $search;

@@ -236,7 +236,7 @@
             <?php if (!empty($records)): ?>
               <?php foreach ($records as $r): ?>
                 <tr class="table-row">
-                  <td class="py-4 px-6 font-medium text-gray-900"><?= $counter ?></td>
+                 <td class="py-4 px-6 font-medium text-gray-900"><?= $r['id'] ?></td>
                   <td class="py-4 px-6">
                     <div class="flex items-center">
                       <?php if (!empty($r['photo'])): ?>
